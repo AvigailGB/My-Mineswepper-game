@@ -11,12 +11,34 @@
 </head>
 
 <body onload="init()">
+    <div class="buttons">
+        <button onclick="changeGamelevel(4)">4 X 4</button>
+        <button onclick="changeGamelevel(8)">8 X 8</button>
+        <button onclick="changeGamelevel(12)">12 X 12</button><br>
+        <button class="face" onclick="init()">😃</button>
+    </div>
 
+
+    <div class="modals">
+        <div class="victory">Victory</div>
+
+        <div class="game-over">
+            <h3>Game Over</h3>
+            <button onclick="init()">Play Again</button>
+        </div>
+    </div>
+
+    <div class="modal-time">
+        Game Time: <span class="time">0.000</p>
+    </div>
     <div class="board-game"></div>
+
+    <div class="name">Avigail Buxbaum</div>
 
     <script src="js/utils.js"></script>
     <script src="js/game.js"></script>
     <script src="js/starters.js"></script>
+    <script src="js/additions.js"></script>
 </body>
 
 </html>

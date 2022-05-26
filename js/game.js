@@ -1,18 +1,47 @@
 'use strict'
+const EMPTY = ' '
+const FLAG ='🏴'
+const STARTFACE = '😃'
+const LOZFACE = '😱'
 
-var gBoard 
+var gLevel = {
+    size: 4,
+    mines: 2
+}
+var gBoard
+var gStartTime
+var gInterval
+
 var gGame = {
     isOn: false,
+    isStart: false,
+    shownCount: 0,
+    markedCount: 0,
+    secsPassed: 0,
+    isVictory: false,
 }
 
 function init() {
-    gBoard = creatBoard(4)
+    var elFace =document.querySelector('.face')
+        elFace.innerText = STARTFACE
+
+    clearInterval(gInterval)
+    gInterval = 0
+
+    gStartTime = 0
+    renderTime()
+
+    gGame = {
+        isOn: true,
+        isStart: false,
+        shownCount: 0,
+        markedCount: 0,
+        secsPassed: 0,
+        isVictory: false,
+    }
+
+    gBoard = creatBoard(gLevel.size)
     printMat(gBoard, '.board-game')
-    gBoard[2][3].value = BOMB
-    renderCell({ i: 2, j: 3 }, BOMB)
-    gBoard[1][1].value = BOMB
-    renderCell({ i: 1, j: 1 }, BOMB)
-    setMineNegsCount()
 }
 
 function creatBoard(length) {
@@ -23,10 +52,11 @@ function creatBoard(length) {
         for (var j = 0; j < length; j++) {
             board[i][j] = {
                 location: { i, j },
-                countNegs: 0,
-                value: '',
+                minesAroundCount: 0,
                 isMark: false,
-                isShown: false
+                isShown: false,
+                isMine: false,
+                isMineAround: false
             }
         }
     }
@@ -34,40 +64,52 @@ function creatBoard(length) {
 }
 
 function cellClicked(elCell, i, j) {
-    console.log('i ,j',i ,j)
-    gBoard[i][j].isShown = true
-    var hidding = elCell.querySelector('.hidding')
-    hidding.style.display = 'none'
-
-    if (!gGame.isOn) {
-       
-        // startGame(i, j)
+    if(!gGame.isOn) return
+    if(!gGame.isStart) {
+        startGame(i, j)
+        setMineNegsCount()
+        gGame.isStart = true
+        if (!gInterval) {
+			gStartTime = new Date();
+			gInterval = setInterval(renderTime, 1);
+		}
     }
+    var value = (gBoard[i][j].isMine) ? BOMB : gBoard[i][j].minesAroundCount
+    if(value === BOMB){
+        gameOver() 
+        return
+    } 
+    renderCells({ i, j }, value)
+    checkVictory()
+    console.log(gGame.shownCount)
+
 }
 
-function setMineNegsCount(){
-    console.log('gBoard[i][j]',gBoard[1][1])
+function gameOver(victory = false){
+    clearInterval(gInterval)
+    gGame.isOn = false
+
+    if(!victory){
+        var elFace =document.querySelector('.face')
+        elFace.innerText = LOZFACE
+    }
+
+    var elgameOver = document.querySelector('.game-over')
+    console.log('elgameOver',elgameOver)
+    elgameOver.style.disply = 'block'
+
     for(var i = 0 ; i < gBoard.length ; i++){
         for(var j = 0 ; j < gBoard[0].length ; j++){
-            gBoard[i][j].countNegs = countNeighbors({i, j})
-            var count = gBoard[i][j].countNegs
-            if(count === 0)continue
-            renderCell({i, j}, count)
+            if(gBoard[i][j].isMine) renderCell({i,j}, BOMB)
+
         }
     }
 }
 
-function countNeighbors(location){
-    var count = 0
-
-    for(var i = location.i - 1 ; i <= location.i + 1 ; i++){
-        if(i < 0 || i >= gBoard.length) continue
-        for(var j = location.j - 1 ; j <= location.j + 1 ; j++){
-            if(j < 0 || j >= gBoard[0].length) continue
-            if(i === location.i && j === location.j) continue 
-            if(gBoard[i][j].value === BOMB) count++
-        }
+function checkVictory(){
+    if(gGame.shownCount + gGame.markedCount === gLevel.size ** 2){
+        gameOver(true)
+        var elVictory = document.querySelector('.victory')
+        elVictory.style.disply = 'block'
     }
-    return count
 }
-
